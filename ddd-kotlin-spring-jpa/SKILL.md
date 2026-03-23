@@ -64,19 +64,19 @@ class ProjectDeletedEvt(
 const val AGG_TYPE_PROJECT = "Project"
 ```
 
-#### <Agg>.kt 文件
+#### Agg.kt 文件
 
 定义聚合的文件，文件名如 `ProjectAgg.kt` `OrderAgg.kt` 。
 
-#### <Factory>.kt 文件
+#### Factory.kt 文件
 
 定义聚合工厂的文件，文件名如 `ProjectFactory.kt` `OrderFactory.kt`
 
-#### <Repository>.kt 文件
+#### Repository.kt 文件
 
 定义仓储接口的文件，文件名如 `ProjectRepository.kt` `OrderRepository.kt` 。
 
-#### <Cmd>.kt 文件
+#### Cmd.kt 文件
 定义聚合命令的文件，文件名如 `PlaceOrderCmd.kt` `SendMailCmd.kt` 。 聚合命令，及其 `Handler` 类都定义到这个文件里。比如
 
 ```kotlin
@@ -336,6 +336,12 @@ class OrderImpl(
 }
 ```
 
+#### 如何在聚合内访问spring 管理的单例对象
+
+聚合对象不是sprig管理的，不能通过spring依赖注入机制注入spring管理的单例对象，比如 Repository Serivce CmdHandler 等。不过有时候，我们需要让聚合去访问这些被spring管理的单例对象，这个时候可以通过 `DomainRegistry` 实现。
+
+在任何可以通过spring依赖注入的场景下，必须优先使用spring依赖注入，而不是 `DomainRegistry`。
+
 #### 如何删除聚合
 
 * 优先考虑不设计删除聚合的功能，而是通过“下线” “隐藏” “废弃” 等更贴合业务的方式去实现类似功能
@@ -421,10 +427,16 @@ class GiveCreditOnOrderPlacedListener(
 }
 ```
 
+
+### DomainRegistory
+
+* 在任何可以通过spring依赖注入的场景下，必须优先使用spring依赖注入，而不是 `DomainRegistry`
+* 不能通过spring依赖注入获取依赖的场景下，通过 `DomainRegistry` 获取
+* `DomainRegistry` 只服务于领域模块
+
 ## 最佳实践
 
 * 遵循哪个对象调用仓储查询出聚合，这个对象就要负责把查询出的对象存回仓储
 * 能够隐藏到聚合中的功能，就不要放到领域服务中(CommandHandler也是一种领域服务)
 * 创建聚合时的业务逻辑，优先在聚合工厂里实现，而不是在CommandHandler里实现
-* 通过在 DomainRegistry 中定义函数来让聚合可以得到spring 管理的 bean 的引用
 * 可以把命令作为传递给聚合、聚合工厂等，以避免传递太多命令里的数据
